@@ -1,6 +1,9 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 
+let websocketURI: string
+
+
 export function MyTerminal() {
   const terminalRef = useRef<HTMLDivElement>(null)
   const terminal = useRef<any>(null)
@@ -13,6 +16,25 @@ export function MyTerminal() {
     const initTerminal = async () => {
       if (terminalRef.current && !terminal.current) {
         try {
+          // Get Hardware from API
+          const hardwareId = 1
+          let response = await fetch("http://localhost:8080/api/v1/hardware/" + hardwareId, {
+            headers: {
+              "X-API-Key": API_KEY
+            }
+          })
+          
+          if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+          }
+
+          const hardware = await response.json()
+          console.log(hardware)
+
+          websocketURI = "ws://" + hardware.data.ipAddress
+
+          console.log(websocketURI)
+
           // Dynamic imports to avoid SSR issues
           const { Terminal } = await import('@xterm/xterm')
           const { FitAddon } = await import('@xterm/addon-fit')
@@ -72,7 +94,7 @@ export function MyTerminal() {
 
     const initWebSocket = () => {
       console.log('Creating WebSocket connection')
-      socket.current = new WebSocket("ws://localhost:6060")
+      socket.current = new WebSocket(websocketURI)
       
       socket.current.onopen = () => {
         console.log('WebSocket connected')
@@ -111,6 +133,8 @@ export function MyTerminal() {
         }
       }
     }
+
+    
 
     initTerminal()
 

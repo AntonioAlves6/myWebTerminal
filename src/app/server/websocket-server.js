@@ -6,7 +6,17 @@ const wss = new WebSocket.Server({ port: 6060 })
 
 console.log('WebSocket server started on port 6060')
 
-wss.on('connection', (ws) => {
+const allowedOrigins = ['http://localhost'];
+
+wss.on('connection', (ws, req) => {
+  const origin = req.headers.origin;
+  console.log("origin" + origin)
+  if (!allowedOrigins.includes(origin)) {
+    console.log('Origin not allowed')
+    ws.close(1008, 'Origin not allowed');
+    return;
+  }
+
   console.log('Client connected')
   
   // Spawn shell process
